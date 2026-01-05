@@ -385,3 +385,67 @@
     (ok true)
   )
 )
+
+;; Private functions
+(define-private (update-user-activity-notices (user principal))
+  (match (map-get? user-activity user)
+    activity (map-set user-activity user
+      {
+        total-notices: (+ (get total-notices activity) u1),
+        total-comments: (get total-comments activity),
+        total-likes: (get total-likes activity),
+        reputation: (+ (get reputation activity) u10)
+      }
+    )
+    (map-set user-activity user
+      {
+        total-notices: u1,
+        total-comments: u0,
+        total-likes: u0,
+        reputation: u10
+      }
+    )
+  )
+)
+
+(define-private (update-user-activity-comments (user principal))
+  (match (map-get? user-activity user)
+    activity (map-set user-activity user
+      {
+        total-notices: (get total-notices activity),
+        total-comments: (+ (get total-comments activity) u1),
+        total-likes: (get total-likes activity),
+        reputation: (+ (get reputation activity) u5)
+      }
+    )
+    (map-set user-activity user
+      {
+        total-notices: u0,
+        total-comments: u1,
+        total-likes: u0,
+        reputation: u5
+      }
+    )
+  )
+)
+
+(define-private (update-user-activity-likes (user principal))
+  (match (map-get? user-activity user)
+    activity (map-set user-activity user
+      {
+        total-notices: (get total-notices activity),
+        total-comments: (get total-comments activity),
+        total-likes: (+ (get total-likes activity) u1),
+        reputation: (+ (get reputation activity) u2)
+      }
+    )
+    (map-set user-activity user
+      {
+        total-notices: u0,
+        total-comments: u0,
+        total-likes: u1,
+        reputation: u2
+      }
+    )
+  )
+)
