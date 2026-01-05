@@ -276,3 +276,112 @@
     (ok true)
   )
 )
+
+(define-public (pin-notice (notice-id uint))
+  (let
+    (
+      (notice (unwrap! (map-get? notices notice-id) err-not-found))
+    )
+    (asserts! (or (is-eq tx-sender contract-owner) (is-moderator tx-sender)) err-not-moderator)
+    (asserts! (get active notice) err-not-found)
+    (asserts! (not (get pinned notice)) err-already-pinned)
+    (asserts! (< (var-get pinned-count) max-pinned-notices) err-unauthorized)
+    
+    (map-set notices notice-id (merge notice { pinned: true }))
+    (var-set pinned-count (+ (var-get pinned-count) u1))
+    (ok true)
+  )
+)
+
+(define-public (unpin-notice (notice-id uint))
+  (let
+    (
+      (notice (unwrap! (map-get? notices notice-id) err-not-found))
+    )
+    (asserts! (or (is-eq tx-sender contract-owner) (is-moderator tx-sender)) err-not-moderator)
+    (asserts! (get pinned notice) err-not-found)
+    
+    (map-set notices notice-id (merge notice { pinned: false }))
+    (var-set pinned-count (- (var-get pinned-count) u1))
+    (ok true)
+  )
+)
+
+(define-public (add-moderator (user principal))
+  (begin
+    (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+    (asserts! (not (is-moderator user)) err-already-exists)
+    (map-set moderators user true)
+    (ok true)
+  )
+)
+
+(define-public (remove-moderator (user principal))
+  (begin
+    (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+    (asserts! (is-moderator user) err-not-found)
+    (map-delete moderators user)
+    (ok true)
+  )
+)
+
+(define-public (create-category (category-name (string-ascii 50)) (description (string-ascii 200)))
+  (begin
+    (asserts! (or (is-eq tx-sender contract-owner) (is-moderator tx-sender)) err-not-moderator)
+    (asserts! (is-none (map-get? categories category-name)) err-already-exists)
+    (asserts! (> (len category-name) u0) err-invalid-input)
+    
+    (map-set categories category-name
+      {
+        description: description,
+        notice-count: u0,
+        active: true
+      }
+    )
+    (ok true)
+  )
+)
+
+(define-public (update-category (category-name (string-ascii 50)) (description (string-ascii 200)))
+  (let
+    (
+      (cat-info (unwrap! (map-get? categories category-name) err-not-found))
+    )
+    (asserts! (or (is-eq tx-sender contract-owner) (is-moderator tx-sender)) err-not-moderator)
+    
+    (map-set categories category-name
+      (merge cat-info { description: description })
+    )
+    (ok true)
+  )
+)
+
+(define-public (toggle-category (category-name (string-ascii 50)))
+  (let
+    (
+      (cat-info (unwrap! (map-get? categories category-name) err-not-found))
+    )
+    (asserts! (or (is-eq tx-sender contract-owner) (is-moderator tx-sender)) err-not-moderator)
+    
+    (map-set categories category-name
+      (merge cat-info { active: (not (get active cat-info)) })
+    )
+    (ok true)
+  )
+)
+
+(define-public (pause-contract)
+  (begin
+    (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+    (var-set paused true)
+    (ok true)
+  )
+)
+
+(define-public (unpause-contract)
+  (begin
+    (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+    (var-set paused false)
+    (ok true)
+  )
+)
