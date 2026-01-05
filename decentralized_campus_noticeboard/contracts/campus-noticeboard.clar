@@ -75,4 +75,63 @@
     total-likes: uint,
     reputation: uint
   }
-) 
+)
+
+;; Read-only functions
+(define-read-only (get-notice (notice-id uint))
+  (map-get? notices notice-id)
+)
+
+(define-read-only (get-user-notice-count (user principal))
+  (default-to u0 (map-get? user-notice-count user))
+)
+
+(define-read-only (get-notice-nonce)
+  (var-get notice-nonce)
+)
+
+(define-read-only (get-comment (comment-id uint))
+  (map-get? comments comment-id)
+)
+
+(define-read-only (get-comment-nonce)
+  (var-get comment-nonce)
+)
+
+(define-read-only (has-liked (notice-id uint) (user principal))
+  (default-to false (map-get? notice-likes { notice-id: notice-id, user: user }))
+)
+
+(define-read-only (is-moderator (user principal))
+  (default-to false (map-get? moderators user))
+)
+
+(define-read-only (get-category (category-name (string-ascii 50)))
+  (map-get? categories category-name)
+)
+
+(define-read-only (get-user-activity (user principal))
+  (map-get? user-activity user)
+)
+
+(define-read-only (get-pinned-count)
+  (var-get pinned-count)
+)
+
+(define-read-only (is-paused)
+  (var-get paused)
+)
+
+(define-read-only (is-notice-pinned (notice-id uint))
+  (match (map-get? notices notice-id)
+    notice (get pinned notice)
+    false
+  )
+)
+
+(define-read-only (get-notice-like-count (notice-id uint))
+  (match (map-get? notices notice-id)
+    notice (get like-count notice)
+    u0
+  )
+)
